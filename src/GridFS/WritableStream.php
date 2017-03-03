@@ -49,7 +49,7 @@ class WritableStream
      *
      *  * _id (mixed): File document identifier. Defaults to a new ObjectId.
      *
-     *  * aliases (array of strings): DEPRECATED An array of aliases. 
+     *  * aliases (array of strings): DEPRECATED An array of aliases.
      *    Applications wishing to store aliases should add an aliases field to
      *    the metadata document instead.
      *
@@ -61,6 +61,8 @@ class WritableStream
      *
      *  * metadata (document): User data for the "metadata" field of the files
      *    collection document.
+     *
+     *  * compatibleFlag (bool): save `metadata` in "metadata" field or in root fields
      *
      * @param CollectionWrapper $collectionWrapper GridFS collection wrapper
      * @param string            $filename          Filename
@@ -94,6 +96,10 @@ class WritableStream
             throw InvalidArgumentException::invalidType('"metadata" option', $options['metadata'], 'array or object');
         }
 
+        if (isset($options['compatibleFlag']) && ! is_bool($options['compatibleFlag'])) {
+            throw InvalidArgumentException::invalidType('"compatibleFlag" option', $options['compatibleFlag'], 'bool') ;
+        }
+
         $this->chunkSize = $options['chunkSizeBytes'];
         $this->collectionWrapper = $collectionWrapper;
         $this->ctx = hash_init('md5');
@@ -104,6 +110,14 @@ class WritableStream
             'filename' => (string) $filename,
             'uploadDate' => new UTCDateTime,
         ] + array_intersect_key($options, ['aliases' => 1, 'contentType' => 1, 'metadata' => 1]);
+
+        if (isset($options['compatibleFlag']) && $options['compatibleFlag']) {
+            // todo this->file['metadata'] may be object
+            if (isset($this->file['metadata']) && is_array($this->file['metadata'])) {
+                $this->file += $this->file['metadata'];
+                unset($this->file['metadata']);
+            }
+        }
     }
 
     /**

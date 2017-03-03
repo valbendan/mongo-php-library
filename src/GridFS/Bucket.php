@@ -400,6 +400,8 @@ class Bucket
      *  * metadata (document): User data for the "metadata" field of the files
      *    collection document.
      *
+     *  * compatibleFlag (bool): save `metadata` in "metadata" field or in root fields
+     *
      * @param string $filename Filename
      * @param array  $options  Upload options
      * @return resource
